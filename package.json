@@ -1,7 +1,7 @@
 {
   "name": "aitoolkit-widget",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "scripts": {
     "start:dev": "env-cmd -f .env.dev.local react-scripts start",
     "start": "env-cmd -f .env react-scripts start",
