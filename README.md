@@ -17,15 +17,16 @@ Once you have your API key and Bot ID, copy the following code into the body of 
     var apiKey = ""
     var botId = ""
     !function (e, t, i) {
-        var a = document.querySelector(i).attachShadow({mode: "open"}), d = document.createElement("link");
-        d.rel = "stylesheet", d.href = "%REACT_APP_CSS%";
-        let n = document.createElement("section");
-        n.appendChild(d.cloneNode(!0)), a.appendChild(n);
-        var l = document.createElement("script");
-        l.src = "%REACT_APP_JS%", n.appendChild(l);
-        var o = document.createElement("div");
-        o.id = "aitoolkit-widget-root", n.appendChild(o), window.aiConfig = {apiKey: e, botId: t, root: o}
-    }(apiKey, botId, "#aitoolkit-widget");
+        var d = document.querySelector("#aitoolkit-widget").attachShadow({mode: "open"}),
+                n = document.createElement("link");
+        n.rel = "stylesheet", n.href = "https://cdn.jsdelivr.net/npm/aitoolkit-widget@0.1.2/build/static/css/main.min.css";
+        let o = document.createElement("section");
+        o.appendChild(n.cloneNode(!0)), d.appendChild(o);
+        var a = document.createElement("script");
+        a.src = "https://cdn.jsdelivr.net/npm/aitoolkit-widget@0.1.2/build/static/js/main.min.js", o.appendChild(a);
+        var c = document.createElement("div");
+        c.id = "aitoolkit-widget-root", o.appendChild(c), window.aiConfig = {apiKey: e, botId: t, root: c}
+    }(apiKey, botId)
 </script>
 ```
 
