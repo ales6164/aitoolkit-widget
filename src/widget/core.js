@@ -16,14 +16,15 @@ export function useBot(botId, apiKey) {
 
     useEffect(() => {
         if (botId) {
-            fetch(API_URL + "bots/" + botId + "?key=" + apiKey, {
+            fetch(API_URL + "bots/" + botId, {
                 method: "GET", headers: {
                     "Content-Type": "application/json",
+                    "Authorization": "Api-Key " + apiKey,
                 }
             })
                 .then(res => res.json())
                 .then(data => {
-                    if(data?.id) setBotData(data);
+                    if (data?.id) setBotData(data);
                     else handleError({data})
                 })
                 .catch(handleError)
@@ -54,9 +55,10 @@ export function useBot(botId, apiKey) {
             setMessages([...msgs, aiMsg])
         }, 300)
 
-        fetch(API_URL + "bots/" + botId + "/chat" + (chatId ? "/" + chatId : "") + "?key=" + apiKey, {
+        fetch(API_URL + "bots/" + botId + "/public-chat" + (chatId ? "/" + chatId : ""), {
             method: "POST", headers: {
                 "Content-Type": "application/json",
+                "Authorization": "Api-Key " + apiKey,
             }, body: JSON.stringify({message: chatMessage})
         })
             .then(res => res.json())

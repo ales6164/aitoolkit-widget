@@ -4,12 +4,12 @@ import Bot from "./widget/bot";
 import "./index.css"
 
 function initAI(config) {
-    config = config || {api_key: "", botId: "",}
-    if (!config.api_key) return
+    config = config || {apiKey: "", botId: "",}
+    if (!config.apiKey) return
     const root = typeof config.root === "string" ? document.querySelector(config.root) : config.root ? config.root : document.getElementById('aitoolkit-widget')
     if (root) ReactDOM.createRoot(root).render(<React.StrictMode><Bot id={config.botId}
-                                                                      apiKey={config.api_key}/></React.StrictMode>)
+                                                                      apiKey={config.apiKey}/></React.StrictMode>)
 }
 
 window.initAI = initAI
-initChatbot(window.aiConfig)
+initAI(window.aiConfig)

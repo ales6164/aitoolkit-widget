@@ -47,11 +47,11 @@ export default function Bot({id, apiKey}) {
     function renderMsg(msg, i, arr) {
         switch (msg.role) {
             case ROLE.SYSTEM:
-                return (<div key={msg.id || i} className="flex justify-start">
+                return (<div className="flex justify-start">
                     <p className="bg-red-100 rounded-md py-2 px-4 text-sm text-gray-900 border border-red-200">{msg.content}</p>
                 </div>)
             case ROLE.ASSISTANT:
-                return (<div key={msg.id || i} className="flex justify-start mr-8">
+                return (<div className="flex justify-start mr-8">
                     <div className="relative flex-shrink-0">
                         <img
                             className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-400"
@@ -65,7 +65,7 @@ export default function Bot({id, apiKey}) {
                                     </span>) : <span className="text-gray-400">Something went wrong</span>)}</p>
                 </div>)
             case ROLE.USER:
-                return (<div key={msg.id || i} className="flex justify-end ml-8">
+                return (<div className="flex justify-end ml-8">
                     <p className="bg-primary-600 rounded-md py-2 px-4 text-sm text-gray-50">{msg.content}</p>
                 </div>)
         }
@@ -89,13 +89,13 @@ export default function Bot({id, apiKey}) {
                     className="sticky top-0 w-full z-10 flex-shrink-0 flex items-center shadow-sm backdrop-blur-sm bg-white/[0.6] text-gray-900 px-4 py-3 text-lg font-medium leading-6">
                     <span>{botData?.name}</span>
                 </div>
-                {messages.map((t1, t2, t3) => (<div className="mx-4">{renderMsg(t1, t2, t3)}</div>))}
+                {messages.map((t1, t2, t3) => (<div key={t1?.id || t2} className="mx-4">{renderMsg(t1, t2, t3)}</div>))}
             </div>
             <form onSubmit={onSubmit}
                   className="bg-gray-100 flex-shrink-0 p-4 min-w-0 flex items-center border-t border-gray-200">
                 <input
                     ref={inputRef}
-                    className="grow block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-700 focus:ring-primary-700 sm:text-sm"
+                    className="grow block w-full rounded-md text-gray-900 border-gray-300 shadow-sm focus:border-primary-700 focus:ring-primary-700 sm:text-sm"
                     type="text" placeholder="Write a message" value={input}
                     onChange={e => setInput(e.target.value)}/>
                 <button type="submit"

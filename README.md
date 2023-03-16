@@ -18,13 +18,13 @@ Once you have your API key and Bot ID, copy the following code into the body of 
     var botId = "<bot-id>"
     !function (e, t, i) {
         var a = document.querySelector(i).attachShadow({mode: "open"}), d = document.createElement("link");
-        d.rel = "stylesheet", d.href = "https://cdn.jsdelivr.net/npm/aitoolkit-widget@0.1.0/build/static/css/main.f3c2ae30.css";
+        d.rel = "stylesheet", d.href = "https://cdn.jsdelivr.net/npm/aitoolkit-widget@0.1.1/build/static/css/main.f3c2ae30.css";
         let n = document.createElement("section");
         n.appendChild(d.cloneNode(!0)), a.appendChild(n);
         var l = document.createElement("script");
-        l.src = "https://cdn.jsdelivr.net/npm/aitoolkit-widget@0.1.0/build/static/js/main.2b42d6ab.js", n.appendChild(l);
+        l.src = "https://cdn.jsdelivr.net/npm/aitoolkit-widget@0.1.1/build/static/js/main.814e1d5f.js", n.appendChild(l);
         var o = document.createElement("div");
-        o.id = "aitoolkit-widget-root", n.appendChild(o), window.initChatbotConfig = {api_key: e, botId: t, root: o}
+        o.id = "aitoolkit-widget-root", n.appendChild(o), window.aiConfig = {apiKey: e, botId: t, root: o}
     }(apiKey, botId, "#aitoolkit-widget");
 </script>
 ```
