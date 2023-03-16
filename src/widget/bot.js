@@ -55,7 +55,7 @@ export default function Bot({id, apiKey}) {
                     <div className="relative flex-shrink-0">
                         <img
                             className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-400"
-                            src={msg.imageUrl || "https://picsum.photos/id/436/150/150.jpg"} alt=""/>
+                            src={botData.imageUrl || "https://picsum.photos/id/436/150/150.jpg"} alt=""/>
                     </div>
                     <p className="ml-2 bg-gray-100 rounded-md py-2 px-4 text-sm text-gray-900 border border-gray-200">{msg.content || ((arr.length - 1 === i) ? (
                         <span className="">

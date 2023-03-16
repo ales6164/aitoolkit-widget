@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import Bot from "./widget/bot";
-import "./index.css"
 
 function initAI(config) {
     config = config || {apiKey: "", botId: "",}
