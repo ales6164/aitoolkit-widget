@@ -1,77 +1,156 @@
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 
-const API_URL = process.env.REACT_APP_API_URI
+export const API_URL = process.env.REACT_APP_API_URI;
+export const STREAMING_API_URI = process.env.REACT_APP_STREAMING_API_URI;
 
 export const ROLE = {
-    SYSTEM: "system", ASSISTANT: "assistant", USER: "user",
+    SYSTEM: "system",
+    USER: "user",
+    ASSISTANT: "assistant",
 }
 
-const createMessage = (role, content, context = null) => ({role, content, context})
+export function convertMessage(data) {
+    if (!data) return null
+    return {
+        createdAt: data.createdAt || new Date(),
+        author: data.role,
+        message: data.parts || partMessage(data.content),
+        media: data.media,
+        isAI: data.role === "assistant",
+        isSystemMessage: data.role === "system",
+        context: data.context || null
+    }
+}
 
-export function useBot(botId, apiKey) {
-    const [chatId, setChatId] = useState("")
-    const [botData, setBotData] = useState(false)
-    const [messages, setMessages] = useState([])
+function partMessage(message) {
+    return [
+        {
+            type: "text",
+            content: message
+        }
+    ]
+}
+
+const initMessage = botData => (
+    <p className="text-center">
+        Hi there! You can start a conversation by typing a message below. Customize {botData?.name || "your bot"} in
+        the <a
+        href={"#settings"} className="font-bold">Settings</a> tab.
+    </p>
+)
+
+export function useBot(id, _chatId, startMessage, botData = null) {
+    const [chatId, setChatId] = useState(_chatId)
+    const [data, setData] = useState(false)
+    const [messages, setMessages] = useState(startMessage ? [createMessage("System", partMessage(startMessage === true ? initMessage(botData) : startMessage), false, true)] : [])
     const [isTyping, setIsTyping] = useState(false)
 
     useEffect(() => {
-        if (botId) {
-            fetch(API_URL + "bots/" + botId, {
-                method: "GET", headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Api-Key " + apiKey,
-                }
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data?.id) setBotData(data);
-                    else handleError({data})
-                })
-                .catch(handleError)
-                .finally(() => {
-                    setIsTyping(false)
-                })
-        } else {
-            setBotData(null)
+        if (id) {
+            if (startMessage) setMessages([createMessage("System", partMessage(startMessage === true ? initMessage(botData) : startMessage), false, true)])
+            else setMessages([])
+            setChatId(_chatId || null)
+            setIsTyping(false)
+            setData(false)
+            /*return onSnapshot(doc(db, "bots", id), (doc) => {
+                setData(doc.exists() ? {...doc.data(), id: doc.id, ref: doc.ref} : null);
+            });*/
         }
-    }, [botId])
+    }, [id])
 
+    function createMessage(author, messageParts, isAI, isSystemMessage = false, context, media) {
+        return {
+            createdAt: new Date(),
+            author,
+            message: messageParts,
+            media: media || null,
+            isAI,
+            isSystemMessage,
+            context: context || null,
+        }
+    }
 
-    function handleError(e) {
-        const _messages = messages || [],
-            data = e?.response?.data || e?.data
-        if (data?.error || data?.message) setMessages([..._messages, createMessage(ROLE.SYSTEM, data?.message || data?.error)]); else setMessages([..._messages, createMessage(ROLE.SYSTEM, "Something went wrong. Please try again.")])
+    function handleError(e, messages) {
+        const data = e?.response?.data || e?.data
+        if (data?.error || data?.message) {
+            setMessages([...messages, createMessage("System", partMessage(data?.message || data?.error), false, true)])
+        } else {
+            setMessages([...messages, createMessage("System", partMessage("Something went wrong. Please try again."), false, true)])
+        }
     }
 
     async function sendMessage(chatMessage) {
-        if (isTyping) return false
-        const userMsg = createMessage(ROLE.USER, chatMessage), aiMsg = createMessage(ROLE.ASSISTANT, null),
-            msgs = [...messages, userMsg]
+        if (isTyping) return;
+
+        const newMessage = createMessage("User", partMessage(chatMessage)),
+            newAIMessage = createMessage("Assistant", null, true),
+            newMessages = [...messages, newMessage]
+
+        setMessages(newMessages)
 
         setIsTyping(true)
-        setMessages(msgs)
-
         setTimeout(() => {
-            setMessages([...msgs, aiMsg])
+            setMessages([...newMessages, newAIMessage])
         }, 300)
 
-        fetch(API_URL + "bots/" + botId + "/public-chat" + (chatId ? "/" + chatId : ""), {
-            method: "POST", headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Api-Key " + apiKey,
-            }, body: JSON.stringify({message: chatMessage})
+        if (data?.stream) {
+            const eventSource = new EventSource(STREAMING_API_URI + (chatId ? `/bots/${id}/stream/${chatId}` : `/bots/${id}/stream`) + `?message=${encodeURIComponent(chatMessage)}`);
+            //console.log("eventSource", eventSource)
+
+            let msg = "", context = null, media = null, command = null
+            eventSource.addEventListener("context", (e) => {
+                context = JSON.parse(e.data)
+                setMessages([...newMessages, createMessage("Assistant", partMessage(msg), true, false, context, media)])
+            }, false);
+            /*eventSource.addEventListener("media", (e) => {
+                media = JSON.parse(e.data)
+                setMessages([...newMessages, createMessage("Assistant", partMessage(msg, true, false, context, media)])
+            }, false);*/
+            eventSource.addEventListener("command", (e) => {
+                command = JSON.parse(e.data)
+                //console.log("command", command)
+            }, false);
+            eventSource.onmessage = (e) => {
+                if (!chatId && e.lastEventId) setChatId(e.lastEventId)
+                const text = e.data;
+                if (typeof text === "string") {
+                    msg += JSON.parse(text)/*.slice(1, -1)*/
+                    setMessages([...newMessages, createMessage("Assistant", partMessage(msg), true, false, context, media)])
+                }
+            };
+            eventSource.onerror = (error) => {
+                setMessages([...newMessages, createMessage("Assistant", partMessage(msg), true, false, context, media)])
+                eventSource.close();
+                setIsTyping(false)
+                //console.error('Error in EventSource:', error);
+            };
+
+        } else fetch(API_URL + chatId ? `bots/${id}/chat/${chatId}` : `bots/${id}/chat`, {
+            method: "POST",
+            body: JSON.stringify({message: chatMessage}),
         })
-            .then(res => res.json())
-            .then(data => {
-                if (data?.chatId) setChatId(data.chatId)
-                if (data?.message) setMessages([...msgs, createMessage(data.message.role, data.message.content, data.message.context)]);
-                else handleError({data})
+            .then(async (res) => ({...res, data: await res.json()}))
+            .then(res => {
+                if (res.data) {
+                    //console.log(res.data)
+                    if (res.data.chatId) setChatId(res.data.chatId)
+                    if (res.data.message) {
+                        setMessages([...newMessages, createMessage("Assistant", res.data.message.parts, true, false, res.data.message.context, res.data.message.media)])
+
+                        return
+                    }
+                }
+
+                handleError(res, newMessages)
+
             })
-            .catch(handleError)
+            .catch(err => {
+                console.log(err)
+                handleError(err, newMessages)
+            })
             .finally(() => {
                 setIsTyping(false)
             })
-        return true
     }
 
     function resetConversation() {
@@ -79,5 +158,5 @@ export function useBot(botId, apiKey) {
         setChatId("")
     }
 
-    return {botData, isTyping, messages, sendMessage, resetConversation, createMessage}
+    return {data, isTyping, messages, sendMessage, resetConversation, createMessage}
 }
