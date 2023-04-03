@@ -15,3 +15,80 @@ code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+/* General scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+/* Scrollbar track */
+::-webkit-scrollbar-track {
+    /*background: rgb(55, 65, 81);*/
+}
+
+/* Scrollbar thumb */
+::-webkit-scrollbar-thumb {
+    background: rgb(209 213 219);
+    border-radius: 4px;
+}
+
+/* Scrollbar corner */
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(209 213 219) transparent;
+    /*scrollbar-color: rgb(31, 41, 55) rgb(55, 65, 81);*/
+
+}
+
+
+/* thinking message animation */
+
+:root {
+    --angle: 45deg;
+    --opacity: 1;
+}
+
+.rainbow {
+    border-style: dotted;
+    border-color: transparent;
+    background-image: linear-gradient(
+            to right,
+            rgb(75 85 99),
+            rgb(75 85 99)
+    ),
+    conic-gradient(
+            from var(--angle),
+            #266AA6 0deg 90deg,
+            #07131D 0deg 180deg,
+            #266AA6 180deg 360deg,
+            #07131D 270deg 360deg
+    );
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+}
+
+.rainbow-dark {
+    border-style: dotted;
+    border-color: transparent;
+    background-image: linear-gradient(
+            to right,
+            rgb(75 85 99),
+            rgb(75 85 99)
+    ),
+    conic-gradient(
+            from var(--angle),
+            #266AA6 0deg 90deg,
+            #07131D 0deg 180deg,
+            #266AA6 180deg 360deg,
+            #07131D 270deg 360deg
+    );
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+}

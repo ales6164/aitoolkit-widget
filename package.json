@@ -1,11 +1,18 @@
 {
   "name": "aitoolkit-widget",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "private": false,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "start:dev": "env-cmd -f .env.dev.local react-scripts start",
     "start": "env-cmd -f .env react-scripts start",
-    "build": "env-cmd -f .env react-scripts build && mv build/static/js/main*.js build/static/js/main.min.js && mv build/static/css/main*.css build/static/css/main.min.css",
+    "build": "rm -rf dist && env-cmd -f .env babel src/lib --out-dir dist --copy-files",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -13,26 +20,27 @@
     "node": "18"
   },
   "dependencies": {
-    "@headlessui/react": "^1.7.13",
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "@babel/polyfill": "7.12.1",
+    "@headlessui/react": "1.7.13",
+    "@heroicons/react": "2.0.17",
+    "@tailwindcss/forms": "0.5.3",
+    "react-scroll-to-bottom": "^4.2.0"
   },
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.3",
-    "autoprefixer": "^10.4.13",
-    "env-cmd": "^10.1.0",
-    "postcss": "^8.4.21",
-    "tailwindcss": "^3.2.7"
+    "@babel/cli": "7.21.0",
+    "@babel/core": "7.21.4",
+    "@babel/preset-env": "7.21.4",
+    "autoprefixer": "10.4.14",
+    "env-cmd": "10.1.0",
+    "postcss": "8.4.21",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-scripts": "5.0.1",
+    "tailwindcss": "3.3.1"
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "react-app"
     ]
   },
   "browserslist": {
