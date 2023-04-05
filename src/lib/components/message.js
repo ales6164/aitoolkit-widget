@@ -10,11 +10,8 @@ function messagePartsToString(parts, essentials) {
                     case "text":
                         return p.content
                     default:
-                        console.log("Unknown part type: " + p.type, essentials, essentials[p.type])
-                        console.log("Component props: ", p)
                         if (essentials && essentials.hasOwnProperty(p.content?.command)) {
                             const componentFun = essentials[p.content?.command]
-                            console.log("componentFun: ", componentFun, typeof componentFun)
                             return componentFun(p.content)
                         }
                         return p.content

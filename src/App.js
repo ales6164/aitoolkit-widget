@@ -92,13 +92,14 @@ function App() {
     const [open, setOpen] = useState(true)
     const bot = useBot({
         id: "1xrBdjIOf9RVGEcqq6LR",
-        customCommands: [
-            {
-                command: "findProducts",
-                input: "Imaš kakšno idejo kaj naj kupim za rojstnodnevno darilo svoji tašči?",
-                output: "Seveda, lahko razmislimo o nekaj darilih, ki bi jih vaša tašča morda cenila. Kaj pa če bi ji kupili ročno izdelano kristalno vazo ter šopek njenih najlubših rož. Našel sem eno vazo iz naše ponudbe:\n[`10022`]\nČe želite več možnosti, mi lahko poveste več o njenih interesih in hobijih, da bom lahko bolje prilagodil predloge.",
-            }
-        ]
+        /* customCommands: [
+             {
+                 command: "findProducts",
+                 input: "Imaš kakšno idejo kaj naj kupim za rojstnodnevno darilo svoji tašči?",
+                 output: "Seveda, lahko razmislimo o nekaj darilih, ki bi jih vaša tašča morda cenila. Kaj pa če bi ji kupili ročno izdelano kristalno vazo ter šopek njenih najlubših rož. Našel sem eno vazo iz naše ponudbe:\n[`10022`]\nČe želite več možnosti, mi lahko poveste več o njenih interesih in hobijih, da bom lahko bolje prilagodil predloge.",
+             }
+         ],*/
+        enableLocaLStorage: true,
     })
 
     return (

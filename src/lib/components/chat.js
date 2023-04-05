@@ -1,11 +1,11 @@
-import {PaperAirplaneIcon} from "@heroicons/react/20/solid";
-import React, {useEffect, useState} from "react";
+import {EllipsisVerticalIcon, PaperAirplaneIcon} from "@heroicons/react/20/solid";
+import React, {Fragment, useEffect, useState} from "react";
 import {classNames} from "../utils";
 import Spinner from "../spinner";
 import {ChatBubbleLeftRightIcon} from "@heroicons/react/24/outline";
 import {Message} from "./message";
 import ScrollToBottom from 'react-scroll-to-bottom';
-
+import {Menu, Transition} from '@headlessui/react'
 
 export function Chat({
                          bot,
@@ -14,7 +14,6 @@ export function Chat({
                          essentials
                      }) {
     const [normalHeight, setNormalHeight] = useState(0)
-
 
     const resizeTextArea = () => {
         if (bot?.input.current) {
@@ -35,6 +34,10 @@ export function Chat({
 
     useEffect(resizeTextArea, [bot?.input.current?.value, bot?.input.current]);
 
+    function onClearChatHistory() {
+        bot.resetConversation()
+    }
+
     return (
         <div
             className={classNames("relative w-full h-full bg-white dark:bg-gray-700 text-left items-stretch flex flex-col", className)}>
@@ -52,8 +55,8 @@ export function Chat({
             ) : (
                 <>
                     {showHeader && (<div
-                        className="sticky top-0 bg-white dark:bg-gray-700 z-10 border-b border-gray-100 dark:border-gray-600 px-4 py-3">
-                        <div className="flex items-center">
+                        className="sticky top-0 flex flex-shrink-0 items-center justify-between truncate bg-white dark:bg-gray-700 z-10 border-b border-gray-100 dark:border-gray-600 px-4 py-3">
+                        <div className="flex flex-1 items-center">
                             {bot?.data.imageUrl && (<div>
                                 <img
                                     className="inline-block h-9 w-9 rounded-full"
@@ -66,6 +69,42 @@ export function Chat({
                                 <p className="text-xs font-medium text-gray-400">Active</p>
                             </div>
                         </div>
+                        <Menu as="div" className="flex-shrink-0 pr-2">
+                            <Menu.Button
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-gray-700 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                                <span className="sr-only">Open options</span>
+                                <EllipsisVerticalIcon className="h-5 w-5" aria-hidden="true"/>
+                            </Menu.Button>
+                            <Transition
+                                as={Fragment}
+                                enter="transition ease-out duration-100"
+                                enterFrom="transform opacity-0 scale-95"
+                                enterTo="transform opacity-100 scale-100"
+                                leave="transition ease-in duration-75"
+                                leaveFrom="transform opacity-100 scale-100"
+                                leaveTo="transform opacity-0 scale-95"
+                            >
+                                <Menu.Items
+                                    className="absolute right-10 top-3 z-10 mx-3 mt-1 w-48 origin-top-right divide-y divide-gray-200 rounded-md bg-white dark:bg-gray-600 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    <div className="py-1">
+                                        <Menu.Item>
+                                            {({active}) => (
+                                                <a
+                                                    href="#"
+                                                    onClick={onClearChatHistory}
+                                                    className={classNames(
+                                                        active ? 'bg-gray-100 dark:bg-gray-500 text-gray-900 dark:text-white' : 'text-gray-700 dark:text-white',
+                                                        'block px-4 py-2 text-sm'
+                                                    )}
+                                                >
+                                                    Clear chat history
+                                                </a>
+                                            )}
+                                        </Menu.Item>
+                                    </div>
+                                </Menu.Items>
+                            </Transition>
+                        </Menu>
                     </div>)}
 
                     <ScrollToBottom

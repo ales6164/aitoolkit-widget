@@ -10,7 +10,7 @@ const ROLE = {
     ASSISTANT: "assistant",
 }
 
-export function useBot(config = {}) {
+export function useBot(config = {chatId: null, id: null, startMessage: null, enableLocaLStorage: false}) {
     const [isLoading, setIsLoading] = useState(true)
     const [chatId, setChatId] = useState(config.chatId)
     const [data, setData] = useState(false)
@@ -23,12 +23,24 @@ export function useBot(config = {}) {
             if (config.startMessage) setMessages([createMessage(ROLE.SYSTEM, [partMessage(config.startMessage)], false, true)])
             else setMessages([])
             setChatId(config.chatId || null)
+
+            if (config.enableLocaLStorage && window?.localStorage?.getItem) {
+                const stored = JSON.parse(window.localStorage.getItem(`bot-${config.id}`))
+                if (stored?.timestamp > (Date.now() - 1000 * 60 * 60 * 24)) {
+                    if (stored?.chatId) {
+                        setChatId(stored.chatId)
+                    }
+                    if (stored?.messages) {
+                        setMessages(stored?.messages)
+                    }
+                }
+            }
+
             setIsTyping(false)
             setData(false)
             fetch(`${API_URL}/bots/${config.id}`)
                 .then(async (res) => ({...res, data: await res.json()}))
                 .then(({data}) => {
-                    //console.log("data", data)
                     setData(data)
                 })
                 .catch(e => {
@@ -39,15 +51,24 @@ export function useBot(config = {}) {
     }, [config.id])
 
     useEffect(() => {
+        if (config.enableLocaLStorage && window?.localStorage?.setItem && data?.id === config.id) {
+            window.localStorage.setItem(`bot-${config.id}`, JSON.stringify({
+                id: config.id,
+                chatId: config.chatId,
+                messages,
+                timestamp: Date.now()
+            }))
+        }
+    }, [config.id, chatId, messages, config.enableLocaLStorage])
+
+    useEffect(() => {
         if (data !== false) setIsLoading(false)
         data && setTimeout(() => input.current && input.current.focus(), 250)
     }, [data])
 
-
     useEffect(() => {
         !isTyping && input.current && input.current.focus()
     }, [isTyping])
-
 
     function onKeyDown(e) {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -109,7 +130,6 @@ export function useBot(config = {}) {
                     customCommands: config.customCommands || null,
                 }),
                 eventSource = new EventSource(STREAMING_API_URI + (chatId ? `/bots/${config.id}/stream/${chatId}` : `/bots/${config.id}/stream`) + `?${query}`);
-            //console.log("eventSource", eventSource)
 
             let msgParts = [], context = null
             eventSource.addEventListener("context", (e) => {
@@ -122,8 +142,6 @@ export function useBot(config = {}) {
             }, false);*/
             eventSource.addEventListener("command", (e) => {
                 const content = JSON.parse(e.data)
-                //if(config.onTrigger) config.onTrigger(command)
-                //console.log("command", command)
                 if (content) {
                     msgParts.push(partMessage(content, "command"))
                     setMessages([...newMessages, createMessage(ROLE.ASSISTANT, msgParts, true, false, context)])
@@ -141,7 +159,6 @@ export function useBot(config = {}) {
                 setMessages([...newMessages, createMessage(ROLE.ASSISTANT, msgParts, true, false, context)])
                 eventSource.close();
                 setIsTyping(false)
-                //console.error('Error in EventSource:', error);
             };
 
         } else fetch(API_URL + (chatId ? `/bots/${config.id}/chat/${chatId}` : `/bots/${config.id}/chat`), {
@@ -163,7 +180,6 @@ export function useBot(config = {}) {
                 handleError(res, newMessages)
             })
             .catch(err => {
-                console.log(err)
                 handleError(err, newMessages)
             })
             .finally(() => {
@@ -176,7 +192,6 @@ export function useBot(config = {}) {
         setChatId("")
     }
 
-
     return {
         data,
         isTyping,
@@ -185,6 +200,6 @@ export function useBot(config = {}) {
         isLoading,
         onSubmit,
         onKeyDown,
-        input
+        input,
     }
 }
