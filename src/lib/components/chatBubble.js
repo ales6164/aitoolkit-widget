@@ -4,8 +4,6 @@ import {ChatBubbleOvalLeftIcon} from "@heroicons/react/20/solid";
 import {Transition} from "@headlessui/react";
 
 export default function ChatBubble({light, open, setOpen, children}) {
-
-
     return (<>
         <div className="fixed right-4 bottom-4 lg:right-10 lg:bottom-12 flex items-center justify-center">
             <button

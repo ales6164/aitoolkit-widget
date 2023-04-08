@@ -127,7 +127,7 @@ export default function Chat({
                                         <span className={classNames(
                                             "text-sm transition-all duration-300 inline-block overflow-hidden whitespace-nowrap",
                                             showText ? 'max-w-sm ml-2 mr-2' : 'max-w-0'
-                                        )}>New topic</span>
+                                        )}>{t.newTopic || "New topic"}</span>
                                     </div>
                                 </button>
                             </div>
