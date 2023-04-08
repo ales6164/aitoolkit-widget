@@ -1,4 +1,4 @@
-import {classNames, messageTime} from "../utils";
+import {classNames, messageTime} from "../helpers";
 import React from "react";
 
 function messagePartsToString(parts, essentials) {
@@ -14,7 +14,7 @@ function messagePartsToString(parts, essentials) {
                             const componentFun = essentials[p.content?.command]
                             return componentFun(p.content)
                         }
-                        return p.content
+                        return p.content?.command ? p.content?.command + "[`" + p.content.params?.join(", ") + "`]" : JSON.stringify(p.content)
                 }
 
             })}
@@ -22,7 +22,7 @@ function messagePartsToString(parts, essentials) {
     )
 }
 
-export function Message({item, itemIdx, arr, essentials}) {
+export default function Message({item, itemIdx, arr, essentials}) {
     function emptyState() {
         return ((arr.length - 1 === itemIdx) ? (<span><span className="animate-[pulse_1s_0ms_infinite]">.</span><span
                 className="animate-[pulse_1s_200ms_infinite]">.</span><span
@@ -51,7 +51,7 @@ export function Message({item, itemIdx, arr, essentials}) {
                 </div>
             ) : item.isSystemMessage ? (
                 <div className="flex justify-center mx-8">
-                    <p className="whitespace-pre-wrap bg-gray-50 dark:bg-gray-700 rounded-3xl py-2 px-4 text-sm text-gray-700 dark:text-gray-400 text-center">{messagePartsToString(item.message) || emptyState()}</p>
+                    <p className="whitespace-pre-wrap py-2 px-4 text-sm text-gray-700 dark:text-gray-400 text-center">{messagePartsToString(item.message) || emptyState()}</p>
                 </div>
             ) : (
                 <div className="flex justify-end ml-8">

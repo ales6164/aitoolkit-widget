@@ -30,8 +30,12 @@ code {
 
 /* Scrollbar thumb */
 ::-webkit-scrollbar-thumb {
-    background: rgb(55, 65, 81);
+    background: rgb(229 231 235);
     border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: rgb(55, 65, 81);
 }
 
 /* Scrollbar corner */
@@ -42,9 +46,11 @@ code {
 /* Firefox scrollbar */
 * {
     scrollbar-width: thin;
-    scrollbar-color: rgb(55, 65, 81) transparent;
-    /* scrollbar-color: rgb(31, 41, 55) rgb(55, 65, 81);*/
+    scrollbar-color: rgb(229 231 235) transparent;
+}
 
+.dark * {
+    scrollbar-color: rgb(55, 65, 81) transparent;
 }
 
 

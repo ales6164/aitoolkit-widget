@@ -1,18 +1,20 @@
 import {EllipsisVerticalIcon, PaperAirplaneIcon} from "@heroicons/react/20/solid";
 import React, {Fragment, useEffect, useState} from "react";
-import {classNames} from "../utils";
+import {classNames} from "../helpers";
 import Spinner from "../spinner";
 import {ChatBubbleLeftRightIcon} from "@heroicons/react/24/outline";
-import {Message} from "./message";
+import Message from "./message";
 import ScrollToBottom from 'react-scroll-to-bottom';
 import {Menu, Transition} from '@headlessui/react'
 
-export function Chat({
-                         bot,
-                         className,
-                         showHeader = true,
-                         essentials
-                     }) {
+export default function Chat({
+                                 bot,
+                                 className,
+                                 showHeader = true,
+                                 readOnly = false,
+                                 essentials,
+                                 t = {}
+                             }) {
     const [normalHeight, setNormalHeight] = useState(0)
 
     const resizeTextArea = () => {
@@ -55,18 +57,22 @@ export function Chat({
             ) : (
                 <>
                     {showHeader && (<div
-                        className="sticky top-0 flex flex-shrink-0 items-center justify-between truncate bg-white dark:bg-gray-700 z-10 border-b border-gray-100 dark:border-gray-600 px-4 py-3">
+                        className="sticky top-0 flex flex-shrink-0 items-center justify-between bg-white dark:bg-gray-700 z-10 border-b border-gray-100 dark:border-gray-600 px-4 py-3">
                         <div className="flex flex-1 items-center">
-                            {bot?.data.imageUrl && (<div>
-                                <img
-                                    className="inline-block h-9 w-9 rounded-full"
-                                    src={bot?.data.imageUrl}
-                                    alt=""
-                                />
-                            </div>)}
+                            {bot?.data.imageUrl && (
+                                <div className="relative inline-block">
+                                    <img
+                                        className="h-9 w-9 rounded-full"
+                                        src={bot?.data.imageUrl}
+                                        alt=""
+                                    />
+                                    <span
+                                        className="absolute right-0 top-0 block h-2 w-2 rounded-full bg-green-400 ring-2 ring-white"/>
+                                </div>
+                            )}
                             <div className="ml-3">
-                                <p className="text-sm font-medium text-gray-700 dark:text-gray-200"> {bot?.data?.name || "Chatbot"}</p>
-                                <p className="text-xs font-medium text-gray-400">Active</p>
+                                <p className="text-md font-medium text-gray-700 dark:text-gray-200"> {bot?.data?.name || "Chatbot"}</p>
+                                {/*<p className="text-xs font-medium text-gray-400">Active</p>*/}
                             </div>
                         </div>
                         <Menu as="div" className="flex-shrink-0 pr-2">
@@ -97,7 +103,7 @@ export function Chat({
                                                         'block px-4 py-2 text-sm'
                                                     )}
                                                 >
-                                                    Clear chat history
+                                                    {t.clearChatHistory || "Clear chat history"}
                                                 </a>
                                             )}
                                         </Menu.Item>
@@ -108,9 +114,9 @@ export function Chat({
                     </div>)}
 
                     <ScrollToBottom
-                        className="pt-4 pb-4 mb-1 h-full items-stretch flex flex-col grow overflow-y-auto overflow-x-hidden max-w-full">
+                        className="mb-1 h-full items-stretch flex flex-col grow overflow-y-auto overflow-x-hidden max-w-full">
                         <div className="flow-root px-4">
-                            <ul role="list" className="space-y-4">
+                            <ul role="list" className="pt-4 pb-4 space-y-4">
                                 {bot?.messages.map((item, itemIdx, arr) => (
                                     <Message key={itemIdx} item={item}
                                              itemIdx={itemIdx}
@@ -122,8 +128,8 @@ export function Chat({
                         <div className="grow"/>
                     </ScrollToBottom>
 
-                    {bot?.onSubmit && (<div className="px-4 pt-1.5 pb-2 sm:pb-3 lg:pb-4 bg-white dark:bg-gray-700">
-                        <form className="min-w-0 flex flex-1 items-center" onSubmit={bot.onSubmit}>
+                    {!readOnly && (<div className="px-4 pt-1.5 pb-2 sm:pb-3 lg:pb-4 bg-white dark:bg-gray-700">
+                        <form className="min-w-0 flex flex-1 items-center" onSubmit={bot?.onSubmit}>
                             <div className="grow">
                                 <label htmlFor="message" className="sr-only">
                                     Message
@@ -134,14 +140,15 @@ export function Chat({
                                     onKeyDown={bot?.onKeyDown}
                                     rows={1}
                                     className="resize-none overflow-y-auto block w-full bg-gray-100 dark:bg-gray-600 rounded-2xl border-0 shadow-sm outline-none focus:ring-0 sm:text-sm text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400"
-                                    placeholder="Type a message..."
+                                    placeholder={t.typeMessage || "Type a message..."}
                                     autoComplete={"off"}
                                 />
                             </div>
                             <div className="ml-4">
                                 <button
                                     type="submit"
-                                    className="inline-flex justify-center items-center rounded-full border-0 p-1.5 text-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                                    disabled={bot?.isTyping}
+                                    className="inline-flex justify-center items-center rounded-full border-0 p-1.5 text-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:text-gray-500"
                                 >
                                     <PaperAirplaneIcon className="h-5 w-5"
                                                        aria-hidden="true"/>

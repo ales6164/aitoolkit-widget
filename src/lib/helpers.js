@@ -1,3 +1,27 @@
+export function partMessage(content, type = "text") {
+    return {
+        type,
+        content
+    }
+}
+
+export function convertMessage(data) {
+    if (!data) return null
+    return {
+        createdAt: data.createdAt || new Date(),
+        author: data.role,
+        message: data.parts || partMessage(data.content),
+        media: data.media,
+        isAI: data.role === "assistant",
+        isSystemMessage: data.role === "system",
+        context: data.context || null
+    }
+}
+
+export const firestampToDate = fs => {
+    return fs?._seconds ? (new Date(fs._seconds * 1000)) : null
+}
+
 export function useErrorHandler() {
     function handleError(e) {
         catchErrors(e, window.alert);
@@ -124,18 +148,11 @@ export function messageTime(timestamp) {
         return `${timePassedInMinutes.toFixed(0)}m`;
     }
 
-    const date = new Date(timestamp.seconds * 1000);
+    const date = new Date(timestamp.getTime());
     const hours = String(date.getHours());
     const minutes = String(date.getMinutes()).padStart(2, '0');
 
     return `${hours}:${minutes}`;
-}
-
-export function partMessage(content, type = "text") {
-    return {
-        type,
-        content
-    }
 }
 
 

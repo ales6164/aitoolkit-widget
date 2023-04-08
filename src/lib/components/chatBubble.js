@@ -1,9 +1,9 @@
 import React, {Fragment} from "react";
-import {classNames} from "../utils";
+import {classNames} from "../helpers";
 import {ChatBubbleOvalLeftIcon} from "@heroicons/react/20/solid";
 import {Transition} from "@headlessui/react";
 
-export function ChatBubble({light, open, setOpen, children}) {
+export default function ChatBubble({light, open, setOpen, children}) {
 
 
     return (<>

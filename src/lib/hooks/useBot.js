@@ -1,68 +1,89 @@
 import {useEffect, useRef, useState} from "react";
-import {catchErrors, partMessage, serializeQuery} from "../utils";
+import {catchErrors, firestampToDate, partMessage, serializeQuery} from "../helpers";
 
-const API_URL = process.env.REACT_APP_API_URI;
-const STREAMING_API_URI = process.env.REACT_APP_STREAMING_API_URI;
+const API_URL = process.env.REACT_APP_API_URI || "https://chat-gpt-374521.oa.r.appspot.com/v1";
+const STREAMING_API_URI = process.env.REACT_APP_STREAMING_API_URI || "https://api2.aitoolkit.dev/v1";
 
 const ROLE = {
-    SYSTEM: "system",
-    USER: "user",
-    ASSISTANT: "assistant",
+    SYSTEM: "system", USER: "user", ASSISTANT: "assistant",
 }
 
-export function useBot(config = {chatId: null, id: null, startMessage: null, enableLocaLStorage: false}) {
-    const [isLoading, setIsLoading] = useState(true)
+export default function useBot(config = {
+    chatId: null,
+    id: null,
+    startMessage: null,
+    enableLocalStorage: false,
+    fetchHistory: false,
+    headers: {},
+    customCommands: null
+}) {
     const [chatId, setChatId] = useState(config.chatId)
     const [data, setData] = useState(false)
-    const [messages, setMessages] = useState(config.startMessage ? [createMessage(ROLE.SYSTEM, [partMessage(config.startMessage)], false, true)] : [])
+    const [messages, setMessages] = useState(config.startMessage ? [createMessage(new Date(), ROLE.SYSTEM, [partMessage(config.startMessage)], false, true)] : [])
     const [isTyping, setIsTyping] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
     const input = useRef();
 
     useEffect(() => {
-        if (config.id) {
-            if (config.startMessage) setMessages([createMessage(ROLE.SYSTEM, [partMessage(config.startMessage)], false, true)])
-            else setMessages([])
-            setChatId(config.chatId || null)
-
-            if (config.enableLocaLStorage && window?.localStorage?.getItem) {
+        let messages = [], botId = config.id, chatId = config.chatId
+        if (botId) {
+            if (config.startMessage) messages = [createMessage(new Date(), ROLE.SYSTEM, [partMessage(config.startMessage)], false, true)]
+            if (config.enableLocalStorage && window?.localStorage?.getItem) {
                 const stored = JSON.parse(window.localStorage.getItem(`bot-${config.id}`))
+
+                //console.log(config.enableLocalStorage, stored)
+
                 if (stored?.timestamp > (Date.now() - 1000 * 60 * 60 * 24)) {
-                    if (stored?.chatId) {
-                        setChatId(stored.chatId)
-                    }
-                    if (stored?.messages) {
-                        setMessages(stored?.messages)
+                    if (stored?.chatId === chatId || !chatId) {
+                        if (stored?.chatId) chatId = stored.chatId
+                        if (stored?.messages) messages = stored?.messages.map(m => createMessage(new Date(m.createdAt), m.author, m.message, m.author === ROLE.ASSISTANT, m.author === ROLE.SYSTEM, m.context))
                     }
                 }
             }
 
+            setChatId(chatId || null)
             setIsTyping(false)
             setData(false)
-            fetch(`${API_URL}/bots/${config.id}`)
+            setMessages(messages)
+            setIsLoading(true)
+
+            fetch(`${API_URL}/bots/${botId}`, {headers: config.headers})
                 .then(async (res) => ({...res, data: await res.json()}))
                 .then(({data}) => {
-                    setData(data)
+                    if (botId === config.id) {
+                        setData(data)
+                        if (config.chatId === chatId && chatId) {
+                            return fetch(`${API_URL}/bots/${botId}/chat/${chatId}`, {headers: config.headers})
+                                .then(async (res) => ({...res, data: await res.json()}))
+                                .then(({data}) => {
+                                    if (botId === config.id && config.chatId === chatId && data?.results) {
+                                        console.log(data.results)
+                                        setMessages([...messages, ...data.results.map(m => createMessage(firestampToDate(m.createdAt), m.role, m.parts || [partMessage(m.content)], m.role === ROLE.ASSISTANT, m.role === ROLE.SYSTEM, m.context))])
+                                    }
+                                })
+                        }
+                    }
                 })
                 .catch(e => {
                     setData(null)
                     catchErrors(e, window.alert)
                 })
+                .finally(() => {
+                    setIsLoading(false)
+                })
         }
-    }, [config.id])
+    }, [config.id, config.chatId])
 
     useEffect(() => {
-        if (config.enableLocaLStorage && window?.localStorage?.setItem && data?.id === config.id) {
+        if (config.enableLocalStorage && window?.localStorage?.setItem && data?.id === config.id && messages?.length) {
             window.localStorage.setItem(`bot-${config.id}`, JSON.stringify({
-                id: config.id,
-                chatId: config.chatId,
-                messages,
-                timestamp: Date.now()
+                id: config.id, chatId: chatId, messages, timestamp: Date.now()
             }))
         }
-    }, [config.id, chatId, messages, config.enableLocaLStorage])
+    }, [config.id, chatId, messages, config.enableLocalStorage])
 
     useEffect(() => {
-        if (data !== false) setIsLoading(false)
+        //if (data !== false) setIsLoading(false)
         data && setTimeout(() => input.current && input.current.focus(), 250)
     }, [data])
 
@@ -89,9 +110,9 @@ export function useBot(config = {chatId: null, id: null, startMessage: null, ena
         }
     }
 
-    function createMessage(author, messageParts, isAI, isSystemMessage = false, context) {
+    function createMessage(timestamp, author, messageParts, isAI, isSystemMessage = false, context) {
         return {
-            createdAt: new Date(),
+            createdAt: timestamp,
             author,
             message: messageParts,
             media: null,
@@ -104,17 +125,17 @@ export function useBot(config = {chatId: null, id: null, startMessage: null, ena
     function handleError(e, messages) {
         const data = e?.response?.data || e?.data
         if (data?.error || data?.message) {
-            setMessages([...messages, createMessage(ROLE.SYSTEM, [partMessage(data?.message || data?.error)], false, true)])
+            setMessages([...messages, createMessage(new Date(), ROLE.SYSTEM, [partMessage(data?.message || data?.error)], false, true)])
         } else {
-            setMessages([...messages, createMessage(ROLE.SYSTEM, [partMessage("Something went wrong. Please try again.")], false, true)])
+            setMessages([...messages, createMessage(new Date(), ROLE.SYSTEM, [partMessage("Something went wrong. Please try again.")], false, true)])
         }
     }
 
     async function sendMessage(chatMessage) {
         if (isTyping) return;
 
-        const newMessage = createMessage(ROLE.USER, [partMessage(chatMessage)]),
-            newAIMessage = createMessage(ROLE.ASSISTANT, null, true),
+        const newMessage = createMessage(new Date(), ROLE.USER, [partMessage(chatMessage)]),
+            newAIMessage = createMessage(new Date(), ROLE.ASSISTANT, null, true),
             newMessages = [...messages, newMessage]
 
         setMessages(newMessages)
@@ -125,26 +146,33 @@ export function useBot(config = {chatId: null, id: null, startMessage: null, ena
         }, 300)
 
         if (data?.stream) {
-            const query = serializeQuery({
-                    message: chatMessage,
-                    customCommands: config.customCommands || null,
-                }),
-                eventSource = new EventSource(STREAMING_API_URI + (chatId ? `/bots/${config.id}/stream/${chatId}` : `/bots/${config.id}/stream`) + `?${query}`);
+            const queryParams = {
+                message: chatMessage, customCommands: config.customCommands || null,
+            }
+            if (config.headers?.Authorization) {
+                const spl = config.headers.Authorization.split(" ")
+                if (spl.length === 2) {
+                    queryParams["token"] = spl[1]
+                }
+            }
+
+            const query = serializeQuery(queryParams),
+                eventSource = new EventSource(STREAMING_API_URI + (chatId ? `/bots/${config.id}/stream/${chatId}` : `/bots/${config.id}/stream`) + `?${query}`, {withCredentials: true});
 
             let msgParts = [], context = null
             eventSource.addEventListener("context", (e) => {
                 context = JSON.parse(e.data)
-                setMessages([...newMessages, createMessage(ROLE.ASSISTANT, msgParts, true, false, context)])
+                setMessages([...newMessages, createMessage(new Date(), ROLE.ASSISTANT, msgParts, true, false, context)])
             }, false);
             /*eventSource.addEventListener("media", (e) => {
                 media = JSON.parse(e.data)
-                setMessages([...newMessages, createMessage(ROLE.ASSISTANT, partMessage(msg, true, false, context, media)])
+                setMessages([...newMessages, createMessage(new Date(), ROLE.ASSISTANT, partMessage(msg, true, false, context, media)])
             }, false);*/
             eventSource.addEventListener("command", (e) => {
                 const content = JSON.parse(e.data)
                 if (content) {
                     msgParts.push(partMessage(content, "command"))
-                    setMessages([...newMessages, createMessage(ROLE.ASSISTANT, msgParts, true, false, context)])
+                    setMessages([...newMessages, createMessage(new Date(), ROLE.ASSISTANT, msgParts, true, false, context)])
                 }
             }, false);
             eventSource.onmessage = (e) => {
@@ -152,28 +180,28 @@ export function useBot(config = {chatId: null, id: null, startMessage: null, ena
                 const text = e.data;
                 if (typeof text === "string") {
                     msgParts.push(partMessage(JSON.parse(text)))
-                    setMessages([...newMessages, createMessage(ROLE.ASSISTANT, msgParts, true, false, context)])
+                    setMessages([...newMessages, createMessage(new Date(), ROLE.ASSISTANT, msgParts, true, false, context)])
                 }
             };
             eventSource.onerror = (error) => {
-                setMessages([...newMessages, createMessage(ROLE.ASSISTANT, msgParts, true, false, context)])
+                setMessages([...newMessages, createMessage(new Date(), ROLE.ASSISTANT, msgParts, true, false, context)])
                 eventSource.close();
                 setIsTyping(false)
             };
 
         } else fetch(API_URL + (chatId ? `/bots/${config.id}/chat/${chatId}` : `/bots/${config.id}/chat`), {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({message: chatMessage}),
+            method: "POST", headers: {
+                "Content-Type": "application/json", ...config.headers,
+            }, body: JSON.stringify({
+                message: chatMessage, customCommands: config.customCommands || null
+            }),
         })
             .then(async (res) => ({...res, data: await res.json()}))
             .then(res => {
                 if (res.data) {
                     if (res.data.chatId) setChatId(res.data.chatId)
                     if (res.data.message) {
-                        setMessages([...newMessages, createMessage(ROLE.ASSISTANT, res.data.message.parts, true, false, res.data.message.context, res.data.message.media)])
+                        setMessages([...newMessages, createMessage(new Date(), ROLE.ASSISTANT, res.data.message.parts, true, false, res.data.message.context, res.data.message.media)])
                         return
                     }
                 }
@@ -188,18 +216,16 @@ export function useBot(config = {chatId: null, id: null, startMessage: null, ena
     }
 
     function resetConversation() {
+        if (config.enableLocalStorage && window?.localStorage?.setItem && data?.id === config.id) {
+            window.localStorage.setItem(`bot-${config.id}`, JSON.stringify({
+                id: config.id, chatId: chatId, messages: [], timestamp: Date.now()
+            }))
+        }
         setMessages([])
         setChatId("")
     }
 
     return {
-        data,
-        isTyping,
-        messages,
-        resetConversation,
-        isLoading,
-        onSubmit,
-        onKeyDown,
-        input,
+        data, isTyping, messages, resetConversation, isLoading, onSubmit, onKeyDown, input,
     }
 }
