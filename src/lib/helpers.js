@@ -1,6 +1,6 @@
-export function partMessage(content, type = "text") {
+export function partMessage(content, type) {
     return {
-        type,
+        type: type || "text",
         content
     }
 }
