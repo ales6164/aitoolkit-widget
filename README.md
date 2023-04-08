@@ -12,7 +12,7 @@ Once you have your API key and Bot ID, copy the following code inside the <head>
 
 ```html
 
-<script src="https://unpkg.com/ai-toolkit-widget/dist/style.min.css"></script>
+<script src="https://unpkg.com/aitoolkit-widget/dist/style.min.css"></script>
 ```
 
 And the following code inside the <body> tag of your website:
@@ -22,7 +22,7 @@ And the following code inside the <body> tag of your website:
 <div id="root"></div>
 <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/ai-toolkit-widget/dist/Widget.bundle.js"></script>
+<script src="https://unpkg.com/aitoolkit-widget/dist/Widget.bundle.js"></script>
 <script>
     const rootElement = document.getElementById('root');
     ReactDOM.render(React.createElement(Widget, {

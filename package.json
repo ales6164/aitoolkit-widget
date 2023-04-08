@@ -1,6 +1,6 @@
 {
   "name": "aitoolkit-widget",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI Toolkit's chatbot widget",
   "private": false,
   "main": "dist/main.bundle.js",
