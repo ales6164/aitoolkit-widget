@@ -16,6 +16,13 @@ code {
     monospace;
 }
 
+.transition-opacity {
+    transition: opacity 0.3s ease;
+}
+
+.transition-width {
+    transition: width 0.3s ease;
+}
 
 /* General scrollbar styling */
 ::-webkit-scrollbar {

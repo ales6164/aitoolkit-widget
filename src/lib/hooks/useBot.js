@@ -91,11 +91,38 @@ export default function useBot(config = {
         !isTyping && input.current && input.current.focus()
     }, [isTyping])
 
+    const [normalHeight, setNormalHeight] = useState(0)
+
+
+    useEffect(resizeTextArea, [input.current?.value, input.current]);
+
+    function resizeTextArea() {
+        if (input.current) {
+            let oneRowHeight = normalHeight
+            if (!oneRowHeight && input.current.scrollHeight > 0) {
+                oneRowHeight = input.current.scrollHeight
+                setNormalHeight(oneRowHeight)
+            }
+            input.current.style.height = "auto";
+            if (input.current.scrollHeight > oneRowHeight * 4) {
+                input.current.style.height = (oneRowHeight * 4) + "px";
+                input.current.style.overflowY = "auto";
+            } else {
+                input.current.style.height = input.current.scrollHeight + "px";
+                input.current.style.overflowY = "hidden";
+            }
+        }
+    }
+
     function onKeyDown(e) {
         if (e.key === "Enter" && !e.shiftKey) {
             if (!e.repeat) onSubmit()
             e.preventDefault(); // Prevents the addition of a new line in the text field
         }
+    }
+
+    function onChange(e) {
+        resizeTextArea()
     }
 
     function onSubmit(e) {
@@ -226,6 +253,6 @@ export default function useBot(config = {
     }
 
     return {
-        data, isTyping, messages, resetConversation, isLoading, onSubmit, onKeyDown, input,
+        data, isTyping, messages, resetConversation, isLoading, onSubmit, onKeyDown, onChange, input,
     }
 }

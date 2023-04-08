@@ -1,8 +1,8 @@
 import {EllipsisVerticalIcon, PaperAirplaneIcon} from "@heroicons/react/20/solid";
-import React, {Fragment, useEffect, useState} from "react";
+import React, {Fragment, useState} from "react";
 import {classNames} from "../helpers";
 import Spinner from "../spinner";
-import {ChatBubbleLeftRightIcon} from "@heroicons/react/24/outline";
+import {ChatBubbleLeftRightIcon, FireIcon} from "@heroicons/react/24/outline";
 import Message from "./message";
 import ScrollToBottom from 'react-scroll-to-bottom';
 import {Menu, Transition} from '@headlessui/react'
@@ -15,37 +15,19 @@ export default function Chat({
                                  essentials,
                                  t = {}
                              }) {
-    const [normalHeight, setNormalHeight] = useState(0)
-
-    const resizeTextArea = () => {
-        if (bot?.input.current) {
-            let oneRowHeight = normalHeight
-            if (!oneRowHeight && bot.input.current.scrollHeight > 0) {
-                oneRowHeight = bot.input.current.scrollHeight
-                setNormalHeight(oneRowHeight)
-            }
-            bot.input.current.style.height = "auto";
-
-            if (bot.input.current.scrollHeight > oneRowHeight * 3) {
-                bot.input.current.style.height = (oneRowHeight * 3) + "px";
-            } else {
-                bot.input.current.style.height = bot.input.current.scrollHeight + "px";
-            }
-        }
-    };
-
-    useEffect(resizeTextArea, [bot?.input.current?.value, bot?.input.current]);
 
     function onClearChatHistory() {
         bot.resetConversation()
     }
 
+    const [showText, setShowText] = useState(false);
+
     return (
         <div
             className={classNames("relative w-full h-full bg-white dark:bg-gray-700 text-left items-stretch flex flex-col", className)}>
-            {bot?.isLoading ? (
+            {bot.isLoading ? (
                 <Spinner className="text-gray-900" big/>
-            ) : !bot?.data?.id ? (
+            ) : !bot.data?.id ? (
                 <div className="flex h-full w-full items-center justify-center">
                     <div className="text-center">
                         <ChatBubbleLeftRightIcon className="mx-auto h-12 w-12 text-gray-400"/>
@@ -59,11 +41,11 @@ export default function Chat({
                     {showHeader && (<div
                         className="sticky top-0 flex flex-shrink-0 items-center justify-between bg-white dark:bg-gray-700 z-10 border-b border-gray-100 dark:border-gray-600 px-4 py-3">
                         <div className="flex flex-1 items-center">
-                            {bot?.data.imageUrl && (
+                            {bot.data.imageUrl && (
                                 <div className="relative inline-block">
                                     <img
                                         className="h-9 w-9 rounded-full"
-                                        src={bot?.data.imageUrl}
+                                        src={bot.data.imageUrl}
                                         alt=""
                                     />
                                     <span
@@ -71,7 +53,7 @@ export default function Chat({
                                 </div>
                             )}
                             <div className="ml-3">
-                                <p className="text-md font-medium text-gray-700 dark:text-gray-200"> {bot?.data?.name || "Chatbot"}</p>
+                                <p className="text-md font-medium text-gray-700 dark:text-gray-200"> {bot.data?.name || "Chatbot"}</p>
                                 {/*<p className="text-xs font-medium text-gray-400">Active</p>*/}
                             </div>
                         </div>
@@ -119,7 +101,7 @@ export default function Chat({
                         className="mb-1 h-full items-stretch flex flex-col grow overflow-y-auto overflow-x-hidden max-w-full">
                         <div className="flow-root px-4">
                             <ul role="list" className="pt-4 pb-4 space-y-4">
-                                {bot?.messages.map((item, itemIdx, arr) => (
+                                {bot.messages.map((item, itemIdx, arr) => (
                                     <Message key={itemIdx} item={item}
                                              itemIdx={itemIdx}
                                              arr={arr}
@@ -131,17 +113,35 @@ export default function Chat({
                     </ScrollToBottom>
 
                     {!readOnly && (<div className="px-4 pt-1.5 pb-2 sm:pb-3 lg:pb-4 bg-white dark:bg-gray-700">
-                        <form className="min-w-0 flex flex-1 items-center" onSubmit={bot?.onSubmit}>
+                        <form className="min-w-0 flex flex-1 items-center" onSubmit={bot.onSubmit}>
+                            <div className="mr-4">
+                                <button
+                                    type="button"
+                                    onClick={() => onClearChatHistory()}
+                                    className="rounded-full bg-primary-600 p-2 text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 transition-all duration-300 overflow-hidden"
+                                    onMouseEnter={() => setShowText(true)}
+                                    onMouseLeave={() => setShowText(false)}
+                                >
+                                    <div className="flex items-center">
+                                        <FireIcon className="h-5 w-5" aria-hidden="true"/>
+                                        <span className={classNames(
+                                            "text-sm transition-all duration-300 inline-block overflow-hidden whitespace-nowrap",
+                                            showText ? 'max-w-sm ml-2 mr-2' : 'max-w-0'
+                                        )}>New topic</span>
+                                    </div>
+                                </button>
+                            </div>
                             <div className="grow">
                                 <label htmlFor="message" className="sr-only">
                                     Message
                                 </label>
                                 <textarea
-                                    ref={bot?.input}
+                                    ref={bot.input}
                                     id="message"
-                                    onKeyDown={bot?.onKeyDown}
+                                    onKeyDown={bot.onKeyDown}
+                                    onChange={bot.onChange}
                                     rows={1}
-                                    className="resize-none overflow-y-auto block w-full bg-gray-100 dark:bg-gray-600 rounded-2xl border-0 shadow-sm outline-none focus:ring-0 sm:text-sm text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400"
+                                    className="resize-none py-2 overflow-y-auto block w-full bg-gray-100 dark:bg-gray-600 rounded-2xl border-0 shadow-sm outline-none focus:ring-0 sm:text-sm text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400"
                                     placeholder={t.typeMessage || "Type a message..."}
                                     autoComplete={"off"}
                                 />
@@ -149,7 +149,7 @@ export default function Chat({
                             <div className="ml-4">
                                 <button
                                     type="submit"
-                                    disabled={bot?.isTyping}
+                                    disabled={bot.isTyping}
                                     className="inline-flex justify-center items-center rounded-full border-0 p-1.5 text-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:text-gray-500"
                                 >
                                     <PaperAirplaneIcon className="h-5 w-5"
