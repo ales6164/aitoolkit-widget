@@ -113,7 +113,7 @@ export default function Chat({
                     </ScrollToBottom>
 
                     {!readOnly && (<div className="px-4 pt-1.5 pb-2 sm:pb-3 lg:pb-4 bg-white dark:bg-gray-700">
-                        <form className="min-w-0 flex flex-1 items-center" onSubmit={bot.onSubmit}>
+                        <form className="min-w-0 flex flex-1 items-center m-0" onSubmit={bot.onSubmit}>
                             <div className="mr-4">
                                 <button
                                     type="button"

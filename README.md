@@ -8,17 +8,16 @@ interface powered by the AI Toolkit platform ([https://aitoolkit.dev](https://ai
 Before integrating the aitoolkit-widget into your website, you must obtain an API key and Bot ID from the AI Toolkit
 website ([https://aitoolkit.dev](https://aitoolkit.dev)).
 
-Once you have your API key and Bot ID, copy the following code inside the <head> tag of your website:
+Once you have your API key and Bot ID, copy the following code inside the `<head>` tag of your website:
 
 ```html
 
-<script src="https://unpkg.com/aitoolkit-widget/dist/style.min.css"></script>
+<link rel="stylesheet" href="https://unpkg.com/aitoolkit-widget/dist/style.min.css">
 ```
 
-And the following code inside the <body> tag of your website:
+And the following code inside the `<body>` tag of your website:
 
 ```html
-
 <div id="root"></div>
 <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
@@ -47,8 +46,8 @@ And the following code inside the <body> tag of your website:
 </script>
 ```
 
-Replace <api-key> and <bot-id> with your actual API key and Bot ID obtained from the AI Toolkit website. You can also
-modify any of the configuration options or translations to suit your needs.
+Replace `<api-key>` and `<bot-id>` with your actual API key and Bot ID obtained from the AI Toolkit website. You can
+also modify any of the configuration options or translations to suit your needs.
 
 And that's it! The aitoolkit-widget should now be displayed on your website and ready to assist your visitors.
 

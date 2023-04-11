@@ -1,12 +1,13 @@
 {
   "name": "aitoolkit-widget",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "AI Toolkit's chatbot widget",
   "private": false,
   "main": "lib/index.js",
   "module": "lib/index.js",
   "scripts": {
     "start:dev": "env-cmd -f .env.dev.local react-scripts start",
+    "start": "env-cmd -f .env react-scripts start",
     "build": "env-cmd -f .env webpack --mode production && npm run build:css && npm run build:package",
     "build:css": "postcss src/index.css -o dist/style.min.css --env production",
     "build:package": "babel src/lib --out-dir lib",
