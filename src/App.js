@@ -4,8 +4,9 @@ import {Chat, ChatBubble, useBot} from "./lib";
 function App() {
     const [open, setOpen] = useState(true)
     const bot = useBot({
-        id: "<bot-id>",
+        id: process.env.REACT_APP_BOT_ID,
         enableLocalStorage: true,
+        startMessage: "Hi there! Try me out by typing a message bellow. I can answer questions, translate text, and much more."
     })
 
     return (

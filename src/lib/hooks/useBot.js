@@ -17,70 +17,23 @@ export default function useBot(config = {
     headers: {},
     customCommands: null
 }) {
-    const [chatId, setChatId] = useState(config.chatId)
+    const [chatId, setChatId] = useState(null)
     const [data, setData] = useState(false)
     const [messages, setMessages] = useState(config.startMessage ? [createMessage(new Date(), ROLE.SYSTEM, [partMessage(config.startMessage)], false, true)] : [])
     const [isTyping, setIsTyping] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const input = useRef();
+    const [normalHeight, setNormalHeight] = useState(0)
+
+    useEffect(() => init(config?.chatId), [config?.id, config?.chatId])
 
     useEffect(() => {
-        let messages = [], botId = config.id, chatId = config.chatId
-        if (botId) {
-            if (config.startMessage) messages = [createMessage(new Date(), ROLE.SYSTEM, [partMessage(config.startMessage)], false, true)]
-            if (config.enableLocalStorage && window?.localStorage?.getItem) {
-                const stored = JSON.parse(window.localStorage.getItem(`bot-${config.id}`))
-
-                //console.log(config.enableLocalStorage, stored)
-
-                if (stored?.timestamp > (Date.now() - 1000 * 60 * 60 * 24)) {
-                    if (stored?.chatId === chatId || !chatId) {
-                        if (stored?.chatId) chatId = stored.chatId
-                        if (stored?.messages) messages = stored?.messages.map(m => createMessage(new Date(m.createdAt), m.author, m.message, m.author === ROLE.ASSISTANT, m.author === ROLE.SYSTEM, m.context))
-                    }
-                }
-            }
-
-            setChatId(chatId || null)
-            setIsTyping(false)
-            setData(false)
-            setMessages(messages)
-            setIsLoading(true)
-
-            fetch(`${API_URL}/bots/${botId}`, {headers: config.headers})
-                .then(async (res) => ({...res, data: await res.json()}))
-                .then(({data}) => {
-                    if (botId === config.id) {
-                        setData(data)
-                        if (config.chatId === chatId && chatId) {
-                            return fetch(`${API_URL}/bots/${botId}/chat/${chatId}`, {headers: config.headers})
-                                .then(async (res) => ({...res, data: await res.json()}))
-                                .then(({data}) => {
-                                    if (botId === config.id && config.chatId === chatId && data?.results) {
-                                        console.log(data.results)
-                                        setMessages([...messages, ...data.results.map(m => createMessage(firestampToDate(m.createdAt), m.role, m.parts || [partMessage(m.content)], m.role === ROLE.ASSISTANT, m.role === ROLE.SYSTEM, m.context))])
-                                    }
-                                })
-                        }
-                    }
-                })
-                .catch(e => {
-                    setData(null)
-                    catchErrors(e, window.alert)
-                })
-                .finally(() => {
-                    setIsLoading(false)
-                })
-        }
-    }, [config.id, config.chatId])
-
-    useEffect(() => {
-        if (config.enableLocalStorage && window?.localStorage?.setItem && data?.id === config.id && messages?.length) {
+        if (config?.enableLocalStorage && window?.localStorage?.setItem && data?.id === config.id && messages?.length) {
             window.localStorage.setItem(`bot-${config.id}`, JSON.stringify({
                 id: config.id, chatId: chatId, messages, timestamp: Date.now()
             }))
         }
-    }, [config.id, chatId, messages, config.enableLocalStorage])
+    }, [chatId, messages, config?.enableLocalStorage])
 
     useEffect(() => {
         //if (data !== false) setIsLoading(false)
@@ -91,10 +44,71 @@ export default function useBot(config = {
         !isTyping && input.current && input.current.focus()
     }, [isTyping])
 
-    const [normalHeight, setNormalHeight] = useState(0)
-
-
     useEffect(resizeTextArea, [input.current?.value, input.current]);
+
+    function init(defaultChatId) {
+        let messages = [], botId = config?.id, chatId = defaultChatId || null
+        if (botId) {
+            if (config.startMessage) messages = [createMessage(new Date(), ROLE.SYSTEM, [partMessage(config.startMessage)], false, true)]
+            if (config.enableLocalStorage && window?.localStorage?.getItem) {
+                const history = window.localStorage.getItem(`bot-${config.id}`)
+                if (history) {
+                    try {
+                        const parsed = JSON.parse(history)
+                        if (parsed?.timestamp > (Date.now() - 1000 * 60 * 60 * 24)) {
+                            if (parsed?.chatId === chatId || !chatId) {
+                                if (parsed?.chatId) chatId = parsed.chatId
+                                if (parsed?.messages) messages = parsed?.messages.map(m => createMessage(new Date(m.createdAt), m.author, m.message, m.author === ROLE.ASSISTANT, m.author === ROLE.SYSTEM, m.context))
+                            }
+                        } else window.localStorage.removeItem(`bot-${config.id}`)
+                    } catch (e) {
+                        console.error(e)
+                        window.localStorage.removeItem(`bot-${config.id}`)
+                    }
+                }
+            }
+
+            setChatId(chatId || null)
+            setIsTyping(false)
+            setMessages(messages)
+
+            if (data?.id !== config.id) {
+                setData(false)
+                setIsLoading(true)
+                fetch(`${API_URL}/bots/${botId}`, {headers: config.headers})
+                    .then(async (res) => ({...res, data: await res.json()}))
+                    .then(({data}) => {
+                        if (botId === config.id) {
+                            setData(data)
+                            if (config.chatId === chatId && chatId) {
+                                return fetch(`${API_URL}/bots/${botId}/chat/${chatId}`, {headers: config.headers})
+                                    .then(async (res) => ({...res, data: await res.json()}))
+                                    .then(({data}) => {
+                                        if (botId === config.id && config.chatId === chatId && data?.results) {
+                                            console.log(data.results)
+                                            setMessages([...messages, ...data.results.map(m => createMessage(firestampToDate(m.createdAt), m.role, m.parts || [partMessage(m.content)], m.role === ROLE.ASSISTANT, m.role === ROLE.SYSTEM, m.context))])
+                                        }
+                                    })
+                            }
+                        }
+                    })
+                    .catch(e => {
+                        setData(null)
+                        catchErrors(e, window.alert)
+                    })
+                    .finally(() => {
+                        setIsLoading(false)
+                    })
+            }
+        }
+    }
+
+    function resetConversation() {
+        if (config?.enableLocalStorage && window?.localStorage?.setItem && data?.id === config.id) {
+            window.localStorage.removeItem(`bot-${config.id}`)
+        }
+        init()
+    }
 
     function resizeTextArea() {
         if (input.current) {
@@ -240,16 +254,6 @@ export default function useBot(config = {
             .finally(() => {
                 setIsTyping(false)
             })
-    }
-
-    function resetConversation() {
-        if (config.enableLocalStorage && window?.localStorage?.setItem && data?.id === config.id) {
-            window.localStorage.setItem(`bot-${config.id}`, JSON.stringify({
-                id: config.id, chatId: chatId, messages: [], timestamp: Date.now()
-            }))
-        }
-        setMessages([])
-        setChatId("")
     }
 
     return {
