@@ -68,10 +68,6 @@ export default function useBot(config = {
                 }
             }
 
-            setChatId(chatId || null)
-            setIsTyping(false)
-            setMessages(messages)
-
             if (data?.id !== config.id) {
                 setData(false)
                 setIsLoading(true)
@@ -80,16 +76,7 @@ export default function useBot(config = {
                     .then(({data}) => {
                         if (botId === config.id) {
                             setData(data)
-                            if (config.chatId === chatId && chatId) {
-                                return fetch(`${API_URL}/bots/${botId}/chat/${chatId}`, {headers: config.headers})
-                                    .then(async (res) => ({...res, data: await res.json()}))
-                                    .then(({data}) => {
-                                        if (botId === config.id && config.chatId === chatId && data?.results) {
-                                            console.log(data.results)
-                                            setMessages([...messages, ...data.results.map(m => createMessage(firestampToDate(m.createdAt), m.role, m.parts || [partMessage(m.content)], m.role === ROLE.ASSISTANT, m.role === ROLE.SYSTEM, m.context))])
-                                        }
-                                    })
-                            }
+                            return fetchChatHistory(botId, chatId, messages)
                         }
                     })
                     .catch(e => {
@@ -99,8 +86,24 @@ export default function useBot(config = {
                     .finally(() => {
                         setIsLoading(false)
                     })
+            } else {
+                setIsLoading(true)
+                fetchChatHistory(botId, chatId, messages)
+                    .catch(e => {
+                        catchErrors(e, window.alert)
+                    })
+                    .finally(() => {
+                        setIsLoading(false)
+                    })
             }
+        } else {
+            setData(false)
+            setIsLoading(false)
         }
+
+        setChatId(chatId || null)
+        setIsTyping(false)
+        setMessages(messages)
     }
 
     function resetConversation() {
@@ -108,6 +111,18 @@ export default function useBot(config = {
             window.localStorage.removeItem(`bot-${config.id}`)
         }
         init()
+    }
+
+    async function fetchChatHistory(botId, chatId, messages) {
+        if (config.chatId === chatId && chatId) {
+            return fetch(`${API_URL}/bots/${botId}/chat/${chatId}`, {headers: config.headers})
+                .then(async (res) => ({...res, data: await res.json()}))
+                .then(({data}) => {
+                    if (botId === config.id && config.chatId === chatId && data?.results) {
+                        setMessages([...messages, ...data.results.map(m => createMessage(firestampToDate(m.createdAt), m.role, m.parts || [partMessage(m.content)], m.role === ROLE.ASSISTANT, m.role === ROLE.SYSTEM, m.context))])
+                    }
+                })
+        }
     }
 
     function resizeTextArea() {
