@@ -163,6 +163,7 @@ export default function useBot(config = {
             input.current.focus()
             sendMessage(message)
             input.current.value = ""
+            resizeTextArea()
         }
     }
 
