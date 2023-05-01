@@ -1,8 +1,8 @@
 import {useEffect, useRef, useState} from "react";
 import {catchErrors, firestampToDate, partMessage, serializeQuery} from "../helpers";
 
-const API_URL = process.env.REACT_APP_API_URI || "https://chat-gpt-374521.oa.r.appspot.com/v1";
-const STREAMING_API_URI = process.env.REACT_APP_STREAMING_API_URI || "https://api2.aitoolkit.dev/v1";
+const _API_URL = process.env.REACT_APP_API_URI || "https://chat-gpt-374521.oa.r.appspot.com/v1";
+const _STREAMING_API_URI = process.env.REACT_APP_STREAMING_API_URI || "https://api2.aitoolkit.dev/v1";
 
 const ROLE = {
     SYSTEM: "system", USER: "user", ASSISTANT: "assistant",
@@ -15,8 +15,13 @@ export default function useBot(config = {
     enableLocalStorage: false,
     fetchHistory: false,
     headers: {},
-    customCommands: null
+    customCommands: null,
+    apiUrl: "",
+    streamingApiUri: "",
 }) {
+    const API_URL = config.apiUrl || _API_URL
+    const STREAMING_API_URI = config.streamingApiUri || _STREAMING_API_URI
+
     const [chatId, setChatId] = useState(null)
     const [data, setData] = useState(false)
     const [messages, setMessages] = useState(config.startMessage ? [createMessage(new Date(), ROLE.SYSTEM, [partMessage(config.startMessage)], false, true)] : [])

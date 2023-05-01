@@ -1,6 +1,6 @@
 {
   "name": "aitoolkit-widget",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "AI Toolkit's chatbot widget",
   "private": false,
   "main": "lib/index.js",
